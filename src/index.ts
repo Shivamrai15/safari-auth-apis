@@ -119,7 +119,6 @@ passport.use(
   )
 );
 
-
 passport.use(
   "jwt",
   new JwtStrategy(
@@ -155,7 +154,7 @@ passport.use(
   )
 );
 
-// Google OAuth Routes
+// Mobile OAuth Routes
 app.get(
   "/api/auth/google",
   passport.authenticate("google", {
@@ -178,37 +177,17 @@ app.get(
         { expiresIn: "30d" }
       );
 
-      // For mobile app deep linking
-      if (req.query.mobile === "true") {
-        // Redirect to mobile app with token
-        return res.redirect(`safari://auth/success?token=${token}`);
-      }
+      console.log("Authentication successful, redirecting to mobile app");
 
-      // For web testing or return JSON response
-      res.json({
-        success: true,
-        message: "Google authentication successful",
-        user: {
-          id: req.user.id,
-          email: req.user.email,
-          name: req.user.name,
-          image: req.user.image,
-        },
-        token,
-      });
+      // Always redirect to mobile app with token
+      return res.redirect(`safari://auth/success?token=${token}`);
     } catch (error) {
       console.error("Callback error:", error);
 
-      if (req.query.mobile === "true") {
-        return res.redirect(
-          `myapp://auth/error?message=Authentication failed`
-        );
-      }
-
-      res.status(500).json({
-        success: false,
-        error: "Authentication failed",
-      });
+      // Redirect to mobile app with error
+      return res.redirect(
+        `safari://auth/error?message=Authentication failed`
+      );
     }
   }
 );
@@ -219,23 +198,43 @@ const authenticateJWT = passport.authenticate("jwt", { session: false });
 // Session endpoint for mobile apps to verify tokens
 app.get("/api/v2/session", authenticateJWT, (req: any, res) => {
   res.json({
+    success: true,
     user: req.user,
   });
 });
 
-// Direct OAuth endpoints for mobile
+// Main mobile auth endpoint
 app.get("/auth/google", (req, res) => {
-  res.redirect("/api/auth/google?mobile=true");
+  console.log("Mobile app requesting Google OAuth");
+  res.redirect("/api/auth/google");
 });
 
+// Health check endpoint
 app.get("/api/v2/health", (req, res) => {
   res.status(200).json({
     status: "UP",
+    message: "Mobile Auth Server is running",
+  });
+});
+
+// Logout endpoint
+app.post("/api/v2/logout", authenticateJWT, (req, res) => {
+  res.json({
+    success: true,
+    message: "Logged out successfully",
+  });
+});
+
+// User profile endpoint
+app.get("/api/v2/profile", authenticateJWT, (req: any, res) => {
+  res.json({
+    success: true,
+    user: req.user,
   });
 });
 
 app.listen(PORT, () => {
-  console.log(`Auth server is running on port ${PORT}`);
+  console.log(`Mobile Auth Server is running on port ${PORT}`);
 });
 
 export default app;
