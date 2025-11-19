@@ -43,6 +43,6 @@ export const sendOTPEmail = async ( email: string, otp: string ) => {
     });
 
   } catch (error) {
-    console.error("NODEMAILER OTP EMAIL ERROR", email);
+    console.error("NODEMAILER OTP EMAIL ERROR", error);
   }
 }
