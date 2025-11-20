@@ -1,10 +1,10 @@
 import type { Request, Response } from "express";
+
 import { db } from "../lib/db.js";
-import { PasswordlessLoginSchema, VerifyOTPSchema } from "../lib/schemas.js";
 import { generateOTP, verifyOTP } from "../lib/otp.js";
 import { sendOTPEmail } from "../lib/mail.js";
-import { JWT_SECRET } from "../config/constants.js";
-import jwt from "jsonwebtoken";
+import { PasswordlessLoginSchema, VerifyOTPSchema } from "../lib/schemas.js";
+import { tokenManager } from "../lib/token.js";
 
 
 export async function passwordlessLoginController(req: Request, res: Response) {
@@ -86,29 +86,26 @@ export async function verifyOTPController(req: Request, res: Response) {
             });
         }
 
-        const token = jwt.sign(
-            {
-                userId: user.id,
-                email: user.email,
-            },
-            JWT_SECRET,
-            { 
-                expiresIn: "30d"
-            }
-        );
+        const { accessToken, refreshToken } = tokenManager.generateAuthTokens({
+            userId: user.id,
+            email: user.email,
+        });
     
         return res.status(200).json({
             status: true,
             message: "Login successful",
             data: {
-                    token,
+                    tokens : {
+                        accessToken,
+                        refreshToken,
+                    },
                     user: {
-                    id: user.id,
-                    email: user.email,
-                    name: user.name,
-                    image: user.image,
-                    emailVerified: user.emailVerified,
-                    createdAt: user.createdAt,
+                        id: user.id,
+                        email: user.email,
+                        name: user.name,
+                        image: user.image,
+                        emailVerified: user.emailVerified,
+                        createdAt: user.createdAt,
                 },
             },
         });

@@ -4,7 +4,7 @@ import { passwordlessLoginController, verifyOTPController } from "../controllers
 const router = Router();
 
 // Passwordless Login
-router.post("/passwordless/login", passwordlessLoginController);
+router.post("/passwordless/send-otp", passwordlessLoginController);
 router.post("/passwordless/verify-otp", verifyOTPController);
 
 export default router;
