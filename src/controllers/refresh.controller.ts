@@ -13,7 +13,7 @@ export async function refreshTokenController(req: Request, res: Response) {
             });
         }
 
-        const result = tokenManager.refreshAccessToken(refreshToken);
+        const result = await tokenManager.refreshAccessToken(refreshToken);
         
         if (result.error || !result.accessToken) {
             return res.status(401).json({ 

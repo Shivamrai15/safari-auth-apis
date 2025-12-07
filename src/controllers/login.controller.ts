@@ -70,6 +70,14 @@ export async function loginController(req: Request, res: Response) {
             email: user.email,
         });
 
+        await db.session.create({
+            data : {
+                userId : user.id,
+                sessionToken : refreshToken,
+                expires : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            }
+        });
+
         return res.status(200).json({
             status: true,
             message: "Login successful",

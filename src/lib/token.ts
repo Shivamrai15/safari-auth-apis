@@ -84,11 +84,22 @@ export class TokenManager {
         }
     }
 
-    refreshAccessToken(refreshToken: string): { accessToken?: string; error?: string } {
+    async refreshAccessToken(refreshToken: string): Promise<{ accessToken?: string; error?: string; }> {
         const verifyResult = this.verifyRefreshToken(refreshToken);
         
         if (!verifyResult.valid || !verifyResult.payload) {
             return { error: verifyResult.error || "Invalid refresh token" };
+        }
+
+        const sessionToken = await db.session.findUnique({
+            where : {
+                sessionToken : refreshToken,
+                userId : verifyResult.payload.userId,
+            }
+        });
+
+        if (!sessionToken) {
+            return { error: "Refresh token not found in active sessions" };
         }
 
         const accessToken = jwt.sign(
